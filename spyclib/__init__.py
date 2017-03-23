@@ -31,23 +31,23 @@ class SpaicSolver:
             self.initialized = True
         self.compute_potentials()
 
+    def check_asymptotic_points(self, pot):
+        jr = 0
+        condition = abs(pot+(spaic.lin+spaic.dl)*(spaic.lin+spaic.dl+1.0)*spaic.pot1) > 1e-3
+        jr = np.arange(spaic.nr)[condition][-1]
+        assert spaic.nr-jr > 10, "too few asymptotic points: {}".format(spaic.nr-jr)
+
     def compute_potentials(self):
         wmin = spaic.wmin
         lin  = spaic.lin
         dl   = spaic.dl
         kin  = spaic.kin
-        pot = spaic.pot0[:]
-        for i, p in enumerate(self.params):
-            pot = pot[:] + (2.* p-1.0) * spaic.pots[:, i]
-        jr = 0
-        for i in range(spaic.nr):
-            if abs(pot[i]+(lin+dl)*(lin+dl+1)*spaic.pot1[i]) > 1e-3:
-                jr = i
-        assert spaic.nr-jr > 10, "too few asymptotic points: {}".format(spaic.nr-jr)
+        pot = spaic.pot0[:] + np.dot(spaic.pots, 2.0 * self.params - 1.0)
+        self.check_asymptotic_points(pot)
         self.bpot = pot[:]
         self.cpot = pot[:] + (lin+dl) * (lin+dl+1.0) * spaic.pot1[:]
         self.eb, self.bpsi = spaic.bnumerov(lin, kin, self.bpot)
-        assert self.eb+spaic.wmin > 0.0, "freqeuncy too small! asym. points: {}, eb+wmin: {}".format(spaic.nr-jr, self.eb+spaic.wmin)
+        assert self.eb+spaic.wmin > 0.0, "frequency too small!  (eb+wmin={:.3g})".format(self.eb+spaic.wmin)
 
     def compute_cpsi(self, E):
         return spaic.cnumerov(spaic.lin+spaic.dl, E, self.cpot, spaic.nr)
