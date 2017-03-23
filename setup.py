@@ -14,8 +14,14 @@ classifiers = [
 "Topic :: Scientific/Engineering"]
 
 
-spaic_module = Extension(name='spyclib.spaic',
-            sources            = ['spyclib/spaic.f90'])
+spaic_module = Extension(
+        name    = 'spyclib.spaic',
+        sources = [
+            'spyclib/spaic.f90'
+        ],
+        # extra_f90_compile_args = ["-fopenmp"],
+        # extra_link_args = ["-lgomp"]
+)
 
 
 

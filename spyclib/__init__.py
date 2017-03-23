@@ -32,9 +32,8 @@ class SpaicSolver:
         self.compute_potentials()
 
     def check_asymptotic_points(self, pot):
-        jr = 0
         condition = abs(pot+(spaic.lin+spaic.dl)*(spaic.lin+spaic.dl+1.0)*spaic.pot1) > 1e-3
-        jr = np.arange(spaic.nr)[condition][-1]
+        jr = np.arange(spaic.nr)[condition[:-1]][-1]
         assert spaic.nr-jr > 10, "too few asymptotic points: {}".format(spaic.nr-jr)
 
     def compute_potentials(self):
