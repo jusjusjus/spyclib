@@ -3,6 +3,8 @@ import logging
 import numpy as np
 from .spaic import spaic
 
+logging.basicConfig(level=logging.INFO)
+
 
 class SpaicSolver:
 
@@ -30,6 +32,7 @@ class SpaicSolver:
             spaic.initialize()
             self.initialized = True
         self.compute_potentials()
+        self.frequencies = np.linspace(spaic.wmin, spaic.wmax, spaic.nw)
 
     def check_asymptotic_points(self, pot):
         condition = abs(pot+(spaic.lin+spaic.dl)*(spaic.lin+spaic.dl+1.0)*spaic.pot1) > 1e-3
@@ -43,18 +46,35 @@ class SpaicSolver:
         kin  = spaic.kin
         pot = spaic.pot0[:] + np.dot(spaic.pots, 2.0 * self.params - 1.0)
         self.check_asymptotic_points(pot)
-        self.bpot = pot[:]
+        self.bpot = pot[:] + lin * (lin+1.0) * spaic.pot1[:]
         self.cpot = pot[:] + (lin+dl) * (lin+dl+1.0) * spaic.pot1[:]
         self.eb, self.bpsi = spaic.bnumerov(lin, kin, self.bpot)
-        assert self.eb+spaic.wmin > 0.0, "frequency too small!  (eb+wmin={:.3g})".format(self.eb+spaic.wmin)
+        assert self.eb+spaic.wmin > 0.0, "Frequency too small!  (eb+wmin={:.3g})".format(self.eb+spaic.wmin)
+        assert (np.isnan(self.bpsi) == False).all(), "Computation of bound state failed. (eb={:.3g})".format(self.eb)
 
-    def compute_cpsi(self, E):
-        return spaic.cnumerov(spaic.lin+spaic.dl, E, self.cpot, spaic.nr)
+    def compute_cpsi(self, E, dl=spaic.dl):
+        lout = spaic.lin+dl
+        assert not lout < 0, "l_out cannot be negative. (dl = {})".format(dl)
+        cpsi = spaic.cnumerov(lout, E, self.cpot, spaic.nr)
+        assert (np.isnan(cpsi) == False).all(), "Computation of continuum state failed. (E={:.3g}, dl={})".format(E, dl)
+        return cpsi
+
+    def compute_spectrum_at_frequency(self, w, dl=spaic.dl):
+        cpsi = self.compute_cpsi(E=self.eb+w, dl=dl)
+        return np.sum( self.bpsi * spaic.rr * cpsi )**2
+
+    def compute_spectrum(self):
+        spectrum = np.array([
+            self.compute_spectrum_at_frequency(w, dl=spaic.dl)
+            for w in self.frequencies
+        ])
+        return spectrum
 
     def plot(self):
         import matplotlib.pyplot as plt
         radius = spaic.rr
         plt.figure(figsize=(10, 7))
+        plt.subplot(211)
         plt.plot(radius, self.bpot, 'k--', lw=1.5)
         plt.plot(radius, self.cpot, 'r--', lw=1.5)
         plt.plot(radius, self.bpsi-0.2, 'b-', lw=2.)
@@ -63,6 +83,11 @@ class SpaicSolver:
         plt.plot(radius, 0.1 + cpsi/5, 'r-', lw=2.)
         plt.xlim(0, 30)
         plt.ylim(-0.3, 0.3)
+        plt.subplot(212)
+        S = self.compute_spectrum()
+        plt.semilogy(self.frequencies, S, 'k-', lw=2.0)
+        plt.xlim(spaic.wmin, spaic.wmax)
+        plt.ylim(10**-4, None)
         self.write_fortran_config()
         plt.show()
 
@@ -70,10 +95,11 @@ class SpaicSolver:
         if num_params is not None:
             self.num_params = num_params
         self.eb = spaic.wmin-1.0
-        while self.eb+spaic.wmin < 0.0:
+        while True:
             new_params = np.random.rand(self.num_params)
-            try:
+            try: # What if it never works?
                 self.set_params(new_params)
+                break
             except AssertionError as e:
                 self.logger.info('{}, retrying..'.format(e))
 
