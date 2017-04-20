@@ -24,6 +24,17 @@ spaic_module = Extension(
 )
 
 
+spaic2_module = Extension(
+        name    = 'spyclib.spaic2',
+        sources = [
+            'spyclib/spaic2_d2pot.f90',
+            'spyclib/spaic2_betaSpect.f90'
+        ],
+        # extra_f90_compile_args = ["-fopenmp"],
+        extra_link_args = ["-llapack", "-lblas"]
+)
+
+
 
 setup(
     name         = "spyclib",
@@ -33,5 +44,5 @@ setup(
     description  = ("Solve the Schroedinger equation."),
     license      = "MIT",
     packages     = ['spyclib'],
-    ext_modules	 = [spaic_module],
+    ext_modules	 = [spaic_module, spaic2_module],
     classifiers	 = classifiers)
