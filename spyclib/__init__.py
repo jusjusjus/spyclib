@@ -70,26 +70,54 @@ class SpaicSolver:
         ])
         return spectrum
 
-    def plot(self):
+    def plot(self, **kwargs):
+        show = kwargs.get('show', True)
+        fs = kwargs.get('fontsize', 14)
         import matplotlib.pyplot as plt
         radius = spaic.rr
-        plt.figure(figsize=(10, 7))
-        plt.subplot(211)
-        plt.plot(radius, self.bpot, 'k--', lw=1.5)
+        plt.figure(figsize=(15, 7))
+        left = 0.05
+        bottom = 0.1
+        width = 0.65
+        height = 1.0 - bottom - 0.05
+        # ax = plt.subplot(121)
+        ax = plt.axes([left, bottom, width, height])
+        plt.title("Potential with Wavefunctions")
+        plt.plot(radius, self.bpot, 'k--', lw=1.5, label="Potential")
         plt.plot(radius, self.cpot, 'r--', lw=1.5)
-        plt.plot(radius, self.bpsi-0.2, 'b-', lw=2.)
+        plt.plot(radius, self.bpsi-0.2, 'b-', lw=2., label="Bound state")
         plt.axhline(y=-0.2, color='b', lw=0.3)
-        cpsi = self.compute_cpsi(self.eb+spaic.wmin)
-        plt.plot(radius, 0.1 + cpsi/5, 'r-', lw=2.)
+        plt.xticks(fontsize=fs)
+        plt.yticks(fontsize=fs)
+        plt.xlabel("Radius", fontsize=fs)
+        plt.ylabel("Energie", fontsize=fs)
+        E_w = spaic.wmin+0.2*(spaic.wmax-spaic.wmin)
+        cpsi = self.compute_cpsi(self.eb+E_w)
+        plt.plot(radius, self.eb+E_w + cpsi/10, 'r-', lw=2., label="Unbound state")
         plt.xlim(0, 30)
-        plt.ylim(-0.3, 0.3)
-        plt.subplot(212)
+        plt.legend(loc=0)
+        left = left + width + 0.05
+        # bottom = 0.1
+        width = 1.0 - left - 0.05
+        # height = 1.0 - bottom - 0.05
+        ax = plt.axes([left, bottom, width, height], sharey=ax, frameon=False, xticks=[], yticks=[])
+        plt.title("Spectrum")
+        # ax = plt.subplot(122, sharey=ax, frameon=False, xticks=[], yticks=[])
         S = self.compute_spectrum()
-        plt.semilogy(self.frequencies, S, 'k-', lw=2.0)
-        plt.xlim(spaic.wmin, spaic.wmax)
-        plt.ylim(10**-4, None)
+        plt.plot(S, self.frequencies, 'k-', lw=2.0)
+        # plt.xlim(spaic.wmin, spaic.wmax)
+        # plt.ylim(10**-4, None)
+        plt.ylim(-0.3, 1.0)
+        plt.xticks(fontsize=fs)
+        plt.yticks(fontsize=fs)
+        # plt.xlabel("Frequenz", fontsize=fs)
+        plt.setp(ax.get_xticklabels(), visible=False)
+        # plt.setp(ax.get_yticklabels(), visible=False)
+        # plt.xlabel("Spektrum", fontsize=fs)
         self.write_fortran_config()
-        plt.show()
+        # plt.tight_layout()
+        if show:
+            plt.show()
 
     def generate_random_potential(self, num_params=None):
         if num_params is not None:
