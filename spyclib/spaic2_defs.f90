@@ -7,4 +7,4 @@ double precision, parameter :: ecmin = 0.05d0
 
 ! GLOBAL PARAMS
 double precision :: rclus=13d0, drclus=1d0, vclus=0.222d0, fluc=0.25d0, rpot=20d0
-integer :: npara=-1
+integer :: num_para=-1

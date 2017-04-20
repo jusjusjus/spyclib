@@ -32,8 +32,8 @@ CONTAINS
     endif
     allocate(parapot(1:n))
     parapot(:) = 2 * params(:) - 1
-    if(npara .NE. n) then
-      npara = n
+    if(num_para .NE. n) then
+      num_para = n
       call initialize()
     endif
   END SUBROUTINE set_density_params
@@ -77,25 +77,25 @@ CONTAINS
     double precision :: r
 
     call deinitialize()
-    allocate(pararho(1:npara))
-    allocate(bsplinepot(0:nr, npara), bsplinerho(0:nr, npara))
-    allocate(rbump(npara), dbump(npara))
+    allocate(pararho(1:num_para))
+    allocate(bsplinepot(0:nr, num_para), bsplinerho(0:nr, num_para))
+    allocate(rbump(num_para), dbump(num_para))
     allocate(rr(0:nr))
 
     ! compute all the b-spline coefficients
     do ii=0,nr
       r = ii*dr + 1d-8
       rr(ii) = r
-      do i=1,npara
-        bsplinerho(ii,i) = bspline3norm(i,r,rpot/(npara+2))
-        bsplinepot(ii,i) = bspline3intnorm(i,r,rpot/(npara+2))
+      do i=1,num_para
+        bsplinerho(ii,i) = bspline3norm(i,r,rpot/(num_para+2))
+        bsplinepot(ii,i) = bspline3intnorm(i,r,rpot/(num_para+2))
       end do
     end do
 
     ! bumpy Wood-Saxon mit Coulomb tail
-    do i=1,npara
-      rbump(i) = (i+3)*((rclus+drclus)/npara)
-      dbump(i) = 2*((rclus+2*drclus)/npara)
+    do i=1,num_para
+      rbump(i) = (i+3)*((rclus+drclus)/num_para)
+      dbump(i) = 2*((rclus+2*drclus)/num_para)
     end do
 
   END SUBROUTINE initialize
@@ -115,19 +115,19 @@ CONTAINS
            / (dbump(:)**4*exp((r-rbump(:))**2/dbump(:)**2)*r))
     end do
   
-    allocate(amat(npara+1,npara+1),bvec(npara+1),caux(npara+1))
+    allocate(amat(num_para+1,num_para+1),bvec(num_para+1),caux(num_para+1))
     bvec(:) = 1
     amat(:,:) = 1
-    amat(npara+1,npara+1) = 0
-    do i1=1,npara
+    amat(num_para+1,num_para+1) = 0
+    do i1=1,num_para
       bvec(i1) = sum(rr(1:)*rhowosabump(1:)*bsplinerho(1:,i1))
-      do i2=i1,npara
+      do i2=i1,num_para
         amat(i1,i2) = sum(rr(1:)*bsplinerho(1:,i1)*bsplinerho(1:,i2))
         amat(i2,i1) = amat(i1,i2)
       end do
     end do
     call linsys(amat,bvec,caux)  
-    pararho(1:npara) = caux(1:npara)
+    pararho(1:num_para) = caux(1:num_para)
 
   END SUBROUTINE compute_potential
 
