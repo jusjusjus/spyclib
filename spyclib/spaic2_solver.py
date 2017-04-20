@@ -5,11 +5,12 @@ from .spaic2 import spaic2_betaspect as bs
 from .spaic2 import spaic2_d2pot as d2p
 
 logging.basicConfig(level=logging.INFO)
+EPS = 1.0**-6
 
 
 class Spaic2Solver:
 
-    logger = logging.getLogger(name='SpaicSolver')
+    logger = logging.getLogger(name='Spaic2Solver')
 
     default_density_params = np.array([
             0.84, 0.39, 0.78, 0.80, 0.91, 0.20, 0.34, 0.77, 0.28,
@@ -20,7 +21,7 @@ class Spaic2Solver:
     default_quantum_numbers = np.array([
             [0, 1],
             [1, 1]
-    ])
+    ], dtype=np.int32)
 
     def __init__(self):
         self.density_params   = self.default_density_params # setter
@@ -62,6 +63,8 @@ class Spaic2Solver:
     @density_params.setter
     def density_params(self, params):
         params = np.asarray(params, dtype=np.float64)
+        assert len(params.shape) == 1, "recieved {}".format(params)
+        assert all(params >= 0.0) and all(params <= 1.0), "recieved {}".format(params)
         d2p.set_density_params(params)
         # Compute new d2p.pararho aka. potential_params
         d2p.compute_potential()
@@ -86,16 +89,19 @@ class Spaic2Solver:
 
     @quantum_numbers.setter
     def quantum_numbers(self, qns):
-        qns = np.asarray(qns, dtype=np.int)
-        condition = len(qns.shape) == 2 and qns.shape[1] == 2
-        assert condition, "QNs example: {} (received {})".format(self.default_quantum_numbers, qns)
-        bs.set_potential_and_qns(self.potential_params, qns)
+        qns = np.array(qns, dtype=np.int32)
+        prs = np.array(self.potential_params, dtype=np.float64)
+        is_valid = len(qns.shape) == 2 and qns.shape[1] == 2
+        assert is_valid, "QNs example: {} (received {})".format(self.default_quantum_numbers, qns)
+        bs.set_potential_and_qns(prs, qns)
 
     def update_potential_params(self):
         self.spectra_computed = False
         if self.quantum_numbers is not None:
-            bs.set_potential_and_qns(self.potential_params, self.quantum_numbers)
+            qns = np.array(self.quantum_numbers)
+            prs = np.array(self.potential_params)
+            bs.set_potential_and_qns(prs, qns)
 
     def compute_spectra(self):
         bs.compute_beta()
-        self.spectra_computed = False
+        self.spectra_computed = True
