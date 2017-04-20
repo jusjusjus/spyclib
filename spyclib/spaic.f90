@@ -1,3 +1,4 @@
+! Written by Ulf Saalmann
 
 MODULE spaic
   IMPLICIT NONE
