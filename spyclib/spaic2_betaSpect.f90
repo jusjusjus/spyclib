@@ -45,6 +45,7 @@ CONTAINS
     double precision, dimension(params_size), intent(in) :: params
     integer, dimension(qns_size, 2), intent(in) :: qns
 
+    ! write (*, *), qns(:, :)
     ! para = params
     if(allocated(para)) then
       deallocate(para)
@@ -57,7 +58,7 @@ CONTAINS
     if(allocated(quantum_numbers)) then
       deallocate(quantum_numbers)
     endif
-    allocate(quantum_numbers(1:qns_size, 0:1))
+    allocate(quantum_numbers(1:qns_size, 1:2))
     quantum_numbers(:, :) = qns(:, :)
     num_qns = qns_size
 
@@ -72,8 +73,8 @@ CONTAINS
 
     ! calculate differential cross section, beta parameter, etc.
     do ii=1,num_qns
-      l = quantum_numbers(ii, 0)
-      n = quantum_numbers(ii, 1)
+      l = quantum_numbers(ii, 1)
+      n = quantum_numbers(ii, 2)
       if (l==0) then
         dipm(:) = 0
         call crossection(l, n, l+1, freq, nfreq, econt,dipp,phip)
