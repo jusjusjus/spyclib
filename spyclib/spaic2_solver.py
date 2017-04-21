@@ -26,6 +26,7 @@ class Spaic2Solver:
     def __init__(self):
         self.density_params   = self.default_density_params # setter
         self.quantum_numbers  = self.default_quantum_numbers # setter
+        self.spectra_computed = False
 
     def plot(self, **kwargs):
         if not self.spectra_computed: self.compute_spectra()
@@ -58,13 +59,16 @@ class Spaic2Solver:
 
     @property
     def density_params(self):
+        """
+        Set or return B spline coefficients defining the potential.
+        """
         return d2p.parapot
 
     @density_params.setter
     def density_params(self, params):
         params = np.asarray(params, dtype=np.float64)
-        assert len(params.shape) == 1, "recieved {}".format(params)
-        assert all(params >= 0.0) and all(params <= 1.0), "recieved {}".format(params)
+        assert len(params.shape) == 1, "received {}".format(params)
+        assert all(params >= 0.0) and all(params <= 1.0), "received {}".format(params)
         d2p.set_density_params(params)
         # Compute new d2p.pararho aka. potential_params
         d2p.compute_potential()
@@ -73,10 +77,12 @@ class Spaic2Solver:
     # Interface to spaic2_betaspect
     @property
     def beta_spectra(self):
+        if not self.spectra_computed: self.compute_spectra()
         return bs.beta
 
     @property
     def spectra(self):
+        if not self.spectra_computed: self.compute_spectra()
         return bs.spec
 
     @property
