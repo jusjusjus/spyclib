@@ -1,12 +1,21 @@
+#!/usr/bin/python3
 
 import spyclib
+import numpy as np
 import matplotlib.pyplot as plt
 
-solver = spyclib.SpaicSolver()
+
+# Test spaic2
+solver = spyclib.Spaic2Solver()
+solver.density_params = np.random.rand(30)
 solver.plot()
 
-while True:
-    solver.generate_random_potential()
-    solver.plot(show=False)
-    plt.savefig("test.jpg")
-    plt.show()
+# Test spaic
+# solver = spyclib.SpaicSolver()
+# solver.plot()
+#
+# while True:
+#     solver.generate_random_potential()
+#     solver.plot(show=False)
+#     plt.savefig("test.jpg")
+#     plt.show()
