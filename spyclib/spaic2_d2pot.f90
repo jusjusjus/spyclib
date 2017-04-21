@@ -16,7 +16,7 @@ IMPLICIT NONE
   ! SUBROUTINES
   public :: linsys
   public :: initialize
-  public :: set_density_params
+  public :: set_woodsaxon_params
   public :: deinitialize
   public :: free_all_memory
   public :: compute_potential
@@ -24,7 +24,7 @@ IMPLICIT NONE
 
 CONTAINS
 
-  SUBROUTINE set_density_params(params, n)
+  SUBROUTINE set_woodsaxon_params(params, n)
     integer, intent(in) :: n
     double precision, dimension(n), intent(in) :: params
     if(allocated(parapot)) then
@@ -36,7 +36,7 @@ CONTAINS
       num_para = n
       call initialize()
     endif
-  END SUBROUTINE set_density_params
+  END SUBROUTINE set_woodsaxon_params
 
 
   SUBROUTINE deinitialize()

@@ -26,7 +26,7 @@ IMPLICIT NONE
   public :: deinitialize
   public :: compute_beta
   public :: free_all_memory
-  public :: set_potential_and_qns
+  public :: set_density_and_qns
 
 
 CONTAINS
@@ -40,7 +40,7 @@ CONTAINS
   END SUBROUTINE free_all_memory
 
 
-  SUBROUTINE set_potential_and_qns(params, params_size, qns, qns_size)
+  SUBROUTINE set_density_and_qns(params, params_size, qns, qns_size)
     integer, intent(in) :: params_size, qns_size
     double precision, dimension(params_size), intent(in) :: params
     integer, dimension(qns_size, 2), intent(in) :: qns
@@ -63,7 +63,7 @@ CONTAINS
     num_qns = qns_size
 
     call initialize()
-  END SUBROUTINE set_potential_and_qns
+  END SUBROUTINE set_density_and_qns
 
 
   SUBROUTINE compute_beta()
