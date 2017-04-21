@@ -55,17 +55,20 @@ class Spaic2Solver:
     # Interface to spaic2_d2pot
     @property
     def potential_params(self):
+        """Return c coefficients describing the charge distribtion.
+        """
         return d2p.pararho
 
     @property
     def density_params(self):
-        """
-        Set or return B spline coefficients defining the potential.
+        """Return B coefficients defining the bumped Wood-Saxon potential.
         """
         return d2p.parapot
 
     @density_params.setter
     def density_params(self, params):
+        """Set B coefficients defining the bumped Wood-Saxon potential.
+        """
         params = np.asarray(params, dtype=np.float64)
         assert len(params.shape) == 1, "received {}".format(params)
         assert all(params >= 0.0) and all(params <= 1.0), "received {}".format(params)
@@ -77,12 +80,12 @@ class Spaic2Solver:
     # Interface to spaic2_betaspect
     @property
     def beta_spectra(self):
-        if not self.spectra_computed: self.compute_spectra()
+        assert self.spectra_computed, "Explicitely call compute_spectra first."
         return bs.beta
 
     @property
     def spectra(self):
-        if not self.spectra_computed: self.compute_spectra()
+        assert self.spectra_computed, "Explicitely call compute_spectra first."
         return bs.spec
 
     @property
