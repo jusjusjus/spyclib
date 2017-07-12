@@ -13,8 +13,8 @@ class Spaic2Solver:
     logger = logging.getLogger(name='Spaic2Solver')
 
     default_woodsaxon_params = np.array([
-            0.84, 0.39, 0.78, 0.80, 0.91, 0.20, 0.34, 0.77, 0.28,
-            0.55, 0.48, 0.63, 0.36, 0.51, 0.95, 0.92, 0.64, 0.72, 0.14, 0.61,
+            0.84, 0.39, 0.78, 0.80, 0.91, 0.20, 0.34, 0.77, 0.28, 0.55,
+            0.48, 0.63, 0.36, 0.51, 0.95, 0.92, 0.64, 0.72, 0.14, 0.61,
             0.02, 0.24, 0.14, 0.80, 0.16, 0.40, 0.13, 0.11, 1.00, 0.22
     ])
 
@@ -25,9 +25,23 @@ class Spaic2Solver:
 
     def __init__(self):
         self.logger.debug('__init__')
-        self.woodsaxon_params = self.default_woodsaxon_params # setter
-        self.quantum_numbers  = self.default_quantum_numbers # setter
+        self.init()
         self.spectra_computed = False
+
+    def init(self):
+        """Initialize the default potential and qms
+
+        @property'es initial point to undefined states, thus
+        necessitating an alternative initialization.
+        """
+        self.woodsaxon_params = self.default_woodsaxon_params # setter
+        qns = self.default_quantum_numbers
+        # Here p2d is accessed, not bs.
+        prs = np.array(p2d.pararho, dtype=np.float64)
+        is_valid = len(qns.shape) == 2 and qns.shape[1] == 2
+        assert is_valid, "QNs example: {} (received {})".format(self.default_quantum_numbers, qns)
+        bs.set_density_and_qns(prs, qns)
+
 
     def plot(self, **kwargs):
         if not self.spectra_computed:
@@ -61,18 +75,24 @@ class Spaic2Solver:
         p2d.free_all_memory()
         bs.free_all_memory()
 
-    # Interface to spaic2_p2dot
     @property
     def density_params(self):
         """Return c coefficients describing the charge distribtion.
         """
-        return p2d.pararho
+        return bs.para
+
+    @density_params.setter
+    def density_params(self, params):
+        params = np.asarray(params, dtype=np.float64)
+        assert len(params.shape) == 1, "received {}".format(params)
+        self.update_density_params(params)
+    
 
     @property
     def woodsaxon_params(self):
         """Return B coefficients defining the bumped Wood-Saxon potential.
         """
-        return p2d.parapot
+        return 0.5 * (p2d.parapot + 1.0)
 
     @woodsaxon_params.setter
     def woodsaxon_params(self, params):
@@ -83,11 +103,12 @@ class Spaic2Solver:
         assert len(params.shape) == 1, "received {}".format(params)
         assert all(params >= 0.0) and all(params <= 1.0), "received {}".format(params)
         p2d.set_woodsaxon_params(params)
-        # Compute new p2d.pararho aka. density_params
+        # Compute new p2d.pararho (!= density_params which is bs.para)
         self.logger.debug('compute_density')
         # p2d.diagnostics()
         p2d.compute_density()
-        self.update_density_params()
+        # Transmit pararho from pot2density to betaSpect
+        self.update_density_params(p2d.pararho)
 
     @property
     def woodsaxon_potential(self):
@@ -114,6 +135,11 @@ class Spaic2Solver:
     def density_potential(self):
         assert self.spectra_computed, "Explicitely call compute_spectra first."
         return bs.pot
+    
+    @property
+    def radius(self):
+        assert self.spectra_computed, "Explicitely call compute_spectra first."
+        return bs.rr
 
     @property
     def quantum_numbers(self):
@@ -127,12 +153,13 @@ class Spaic2Solver:
         assert is_valid, "QNs example: {} (received {})".format(self.default_quantum_numbers, qns)
         bs.set_density_and_qns(prs, qns)
 
-    def update_density_params(self):
+    def update_density_params(self, dparams):
         self.logger.debug('update_density_params')
+        prs = np.array(dparams)
         self.spectra_computed = False
+        # Only important for __init__ where quantum_numbers are None.
         if self.quantum_numbers is not None:
             qns = np.array(self.quantum_numbers)
-            prs = np.array(self.density_params)
             bs.set_density_and_qns(prs, qns)
 
     def compute_spectra(self):
