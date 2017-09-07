@@ -13,14 +13,11 @@ class Spaic2Solver:
     logger = logging.getLogger(name='Spaic2Solver')
 
     default_woodsaxon_params = np.array([
-            0.84, 0.39, 0.78, 0.80, 0.91, 0.20, 0.34, 0.77, 0.28, 0.55,
-            0.48, 0.63, 0.36, 0.51, 0.95, 0.92, 0.64, 0.72, 0.14, 0.61,
-            0.02, 0.24, 0.14, 0.80, 0.16, 0.40, 0.13, 0.11, 1.00, 0.22
+            0.84, 0.39, 0.78, 0.80, 0.91, 0.20, 0.34, 0.77, 0.28, 0.55
     ])
 
     default_quantum_numbers = np.array([
-            [0, 1],
-            [1, 1]
+            [2, 1]
     ], dtype=np.int32)
 
     def __init__(self):
@@ -140,6 +137,11 @@ class Spaic2Solver:
     def radius(self):
         assert self.spectra_computed, "Explicitely call compute_spectra first."
         return bs.rr
+    
+    @property
+    def bpsi(self):
+        assert self.spectra_computed, "Explicitely call compute_spectra first."
+        return bs.bpsi+bs.eb
 
     @property
     def quantum_numbers(self):
