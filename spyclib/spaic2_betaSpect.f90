@@ -7,8 +7,9 @@ IMPLICIT NONE
 
   integer :: num_qns
 
-  double precision :: freqmin=0.25d0, freqmax=1.25d0
-  integer, parameter :: nfreq=100
+  double precision :: freqmin=0.005d0, freqmax=0.080d0
+  integer, parameter :: nfreq=75
+  double precision :: eb
 
   ! ALLOCATABLES
   double precision, allocatable :: pots(:,:)
@@ -27,7 +28,7 @@ IMPLICIT NONE
   double precision, allocatable :: freq(:)
   double precision, allocatable :: para(:)
   integer, allocatable :: quantum_numbers(:, :)
-
+  
   ! INTERFACE
 
   ! SUBROUTINES
@@ -114,7 +115,7 @@ CONTAINS
     double precision, intent(in) :: freq(0:nfreq) 
     double precision, intent(out) :: econt(0:nfreq),dip(0:nfreq),phi(0:nfreq) 
     integer :: i, j
-    double precision :: eb, kc, angular,s,c
+    double precision :: kc, angular,s,c
  
     j = max(lin,lfin)
     angular = j/sqrt(4*j*j-1d0)
@@ -126,12 +127,9 @@ CONTAINS
     call bdiag(nin, bpot(:), nr,eb,bpsi)
 
 
-    if (eb+freq(0)<ecmin) &
-         call warning("some frequencies are too small to ionize the sysmtem")
-
     ! calculate continum states and dipole matrix element
     do i=0, nfreq
-      econt(i) = eb+freq(i)
+      econt(i) = freq(i)
       kc = sqrt(2*econt(i))
       if (econt(i)<ecmin) then
         dip(i) = 0

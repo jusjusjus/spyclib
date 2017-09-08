@@ -5,17 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-# Test spaic2
+# Test spaic2a
 solver = spyclib.Spaic2Solver()
-solver.woodsaxon_params = np.random.rand(30)
+solver.woodsaxon_params = np.random.rand(10)
 solver.plot()
-
-# Test spaic
-# solver = spyclib.SpaicSolver()
-# solver.plot()
-#
-# while True:
-#     solver.generate_random_potential()
-#     solver.plot(show=False)
-#     plt.savefig("test.jpg")
-#     plt.show()
