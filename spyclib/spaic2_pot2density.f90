@@ -17,6 +17,9 @@ IMPLICIT NONE
   
   ! INTERFACE
 
+  double precision :: rclus
+  double precision :: drclus
+  
   ! SUBROUTINES
   public :: linsys
   public :: initialize

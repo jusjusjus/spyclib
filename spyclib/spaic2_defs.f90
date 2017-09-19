@@ -6,5 +6,5 @@ integer, parameter :: nr=int(rmax/dr), nasymp=int(rasymp/dr)
 double precision, parameter :: ecmin = 0.002d0
 
 ! GLOBAL PARAMS
-double precision :: rclus=11d0, drclus=0.9d0, vclus=0.2d0, fluc=0.1d0, rpot=15d0
+double precision :: vclus=0.2d0, fluc=0.1d0, rpot=15d0
 integer :: num_para=-1
