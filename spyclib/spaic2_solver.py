@@ -19,11 +19,19 @@ class Spaic2Solver:
     default_quantum_numbers = np.array([
             [2, 1]
     ], dtype=np.int32)
-
+    
+    default_cluster_radius = np.float64(11.)# rclus
+    default_cluster_steepness = np.float64(0.9) # drclus
+ 
     def __init__(self):
         self.logger.debug('__init__')
+        # Define flags prior to calling self.init()
+        self.cluster_steepness_flag = False
+        self.cluster_radius_flag = False
+        self.woodsaxon_params_flag = False
         self.init()
         self.spectra_computed = False
+        
 
     def init(self):
         """Initialize the default potential and qms
@@ -31,7 +39,9 @@ class Spaic2Solver:
         @property'es initial point to undefined states, thus
         necessitating an alternative initialization.
         """
-        self.woodsaxon_params = self.default_woodsaxon_params # setter
+        self.cluster_radius = self.default_cluster_radius # setter
+        self.cluster_steepness = self.default_cluster_steepness # setter
+        self.woodsaxon_params  = self.default_woodsaxon_params # setter
         qns = self.default_quantum_numbers
         # Here p2d is accessed, not bs.
         prs = np.array(p2d.pararho, dtype=np.float64)
@@ -73,6 +83,48 @@ class Spaic2Solver:
         bs.free_all_memory()
 
     @property
+    def cluster_radius(self):
+        """Return cluster radius used for generating the charge distribution.
+        """
+        return p2d.rclus
+
+    @cluster_radius.setter
+    def cluster_radius(self, params):
+        """Set the cluster radius used for generating the charge distribution.
+        """
+        params = np.float64(params)
+        assert isinstance(params,np.float64), "received {}".format(params)
+        # set variable in p2d
+        #p2d.rclus = params
+        p2d.rclus = np.array(params, dtype=np.float64)
+        self.cluster_radius_flag = True
+        # Determine the density parameters and transmit them to betaSpect
+        if self.cluster_steepness_flag and self.woodsaxon_params_flag:
+            # "If condition" only important for __init__ where cluster_steepness is not set.
+            p2d.compute_density()
+            self.update_density_params(p2d.pararho)
+    
+    @property
+    def cluster_steepness(self):
+        """Return cluster steepness used for generating the charge distribution.
+        """
+        return p2d.drclus
+    
+    @cluster_steepness.setter
+    def cluster_steepness(self, params):
+        """Set the cluster steepness used for generating the charge distribution.
+        """
+        params = np.float64(params)
+        assert isinstance(params,np.float64), "received {}".format(params)
+        # set variable in p2d
+        p2d.drclus = params
+        self.cluster_steepness_flag = True
+        # Determine the density parameters and transmit them to betaSpect
+        if self.cluster_radius_flag and self.woodsaxon_params_flag:
+            p2d.compute_density()
+            self.update_density_params(p2d.pararho)
+    
+    @property
     def density_params(self):
         """Return c coefficients describing the charge distribtion.
         """
@@ -100,12 +152,16 @@ class Spaic2Solver:
         assert len(params.shape) == 1, "received {}".format(params)
         assert all(params >= 0.0) and all(params <= 1.0), "received {}".format(params)
         p2d.set_woodsaxon_params(params)
+        self.woodsaxon_params_flag = True
         # Compute new p2d.pararho (!= density_params which is bs.para)
-        self.logger.debug('compute_density')
-        # p2d.diagnostics()
-        p2d.compute_density()
-        # Transmit pararho from pot2density to betaSpect
-        self.update_density_params(p2d.pararho)
+        if self.cluster_radius_flag and self.cluster_steepness_flag:
+            # "If condition" only important for __init__ where cluster 
+            # parameters might not yet be set.
+            self.logger.debug('compute_density')
+            # p2d.diagnostics()
+            p2d.compute_density()
+            # Transmit pararho from pot2density to betaSpect
+            self.update_density_params(p2d.pararho)
 
     @property
     def woodsaxon_potential(self):
